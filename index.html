@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>天赋发现 · 专业测评报告</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Syne:wght@700;800&display=swap');
+:root{
+  --bg:#0a0a14;--surface:#12121f;--card:#1a1a2e;
+  --accent1:#7c3aed;--accent2:#06b6d4;--accent3:#f59e0b;--accent4:#10b981;
+  --text:#f0f0ff;--muted:#7878a0;--border:rgba(255,255,255,0.07);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;position:relative;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 20%,rgba(124,58,237,0.12) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 80%,rgba(6,182,212,0.1) 0%,transparent 60%);pointer-events:none;z-index:0;}
+.orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;animation:drift 12s ease-in-out infinite alternate;}
+.orb1{width:300px;height:300px;background:rgba(124,58,237,0.15);top:-100px;left:-100px;}
+.orb2{width:250px;height:250px;background:rgba(6,182,212,0.12);bottom:-80px;right:-80px;animation-delay:4s;}
+.orb3{width:200px;height:200px;background:rgba(245,158,11,0.1);top:40%;left:60%;animation-delay:8s;}
+@keyframes drift{from{transform:translate(0,0) scale(1);}to{transform:translate(30px,20px) scale(1.1);}}
+.stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.star{position:absolute;width:2px;height:2px;background:white;border-radius:50%;opacity:0;animation:twinkle var(--dur) ease-in-out infinite var(--delay);}
+@keyframes twinkle{0%,100%{opacity:0;}50%{opacity:var(--op);}}
+.container{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
+.screen{display:none;width:100%;max-width:680px;}
+.screen.active{display:flex;flex-direction:column;align-items:center;animation:screenIn 0.5s ease;}
+@keyframes screenIn{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── WELCOME ── */
+.welcome-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.4);border-radius:100px;padding:6px 18px;font-size:12px;color:#a78bfa;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:28px;}
+.welcome-badge::before{content:'✦';font-size:10px;}
+.hero-title{font-family:'Syne',sans-serif;font-size:clamp(36px,8vw,64px);font-weight:800;text-align:center;line-height:1.1;background:linear-gradient(135deg,#fff 0%,#c4b5fd 40%,#67e8f9 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:20px;}
+.hero-sub{font-size:clamp(15px,3vw,18px);color:var(--muted);text-align:center;line-height:1.7;max-width:480px;margin-bottom:48px;}
+.hero-sub span{color:#a78bfa;}
+.talent-chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:48px;}
+.chip{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:100px;padding:8px 16px;font-size:13px;color:var(--muted);transition:all 0.2s;}
+.chip:hover{border-color:rgba(124,58,237,0.4);color:var(--text);transform:translateY(-2px);}
+.chip .emoji{font-size:16px;}
+.meta-row{display:flex;gap:24px;margin-bottom:40px;flex-wrap:wrap;justify-content:center;}
+.meta-item{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);}
+.meta-item .dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(0.8);}}
+.btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg,var(--accent1),#9333ea);color:white;border:none;border-radius:16px;padding:18px 48px;font-size:17px;font-family:'Noto Sans SC',sans-serif;font-weight:700;cursor:pointer;position:relative;overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 0 40px rgba(124,58,237,0.4);letter-spacing:0.03em;}
+.btn-primary::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent,rgba(255,255,255,0.1),transparent);transform:translateX(-100%);transition:transform 0.4s;}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 8px 50px rgba(124,58,237,0.5);}
+.btn-primary:hover::before{transform:translateX(100%);}
+.btn-primary:active{transform:translateY(-1px);}
+
+/* ══ QUIZ HEADER – redesigned progress area ══ */
+.quiz-header { width:100%; margin-bottom:24px; }
+
+/* Row 1: back btn + progress info */
+.quiz-header-top {
+  display:flex; align-items:center; gap:10px; margin-bottom:12px;
+}
+
+/* Back button */
+.btn-back {
+  display:flex; align-items:center; justify-content:center; gap:5px;
+  height:38px; padding:0 14px; flex-shrink:0;
+  border-radius:100px;
+  background:rgba(124,58,237,0.15);
+  border:1.5px solid rgba(124,58,237,0.45);
+  color:#c4b5fd; cursor:pointer;
+  font-size:13px; font-weight:600; font-family:'Noto Sans SC',sans-serif;
+  transition:all 0.2s; white-space:nowrap; letter-spacing:0.02em;
+}
+.btn-back:hover {
+  background:rgba(124,58,237,0.28); border-color:rgba(124,58,237,0.75);
+  color:#e9d5ff; transform:translateX(-2px);
+  box-shadow:0 0 14px rgba(124,58,237,0.3);
+}
+.btn-back:disabled { opacity:0.2; cursor:not-allowed; pointer-events:none; }
+
+/* Progress info block (counter + fraction) */
+.progress-info {
+  flex:1; display:flex; flex-direction:column; gap:8px;
+}
+
+/* "第 N / 30 题" text row */
+.progress-text-row {
+  display:flex; align-items:center; justify-content:space-between;
+}
+.progress-label {
+  font-size:12px; color:var(--muted); letter-spacing:0.03em;
+}
+.progress-fraction {
+  display:flex; align-items:baseline; gap:3px;
+}
+.progress-current {
+  font-family:'Syne',sans-serif; font-size:22px; font-weight:800;
+  color:#c4b5fd; line-height:1;
+}
+.progress-total {
+  font-size:13px; color:var(--muted); font-weight:500;
+}
+.progress-pct-badge {
+  font-size:11px; font-weight:600;
+  color:rgba(124,58,237,0.9);
+  background:rgba(124,58,237,0.12);
+  border:1px solid rgba(124,58,237,0.25);
+  border-radius:100px; padding:2px 9px;
+}
+
+/* Progress bar track */
+.progress-track {
+  width:100%; height:8px;
+  background:rgba(255,255,255,0.06);
+  border-radius:100px; overflow:visible;
+  position:relative;
+}
+/* Glow shadow behind the bar */
+.progress-track::after {
+  content:''; position:absolute; inset:-3px;
+  border-radius:100px;
+  pointer-events:none;
+}
+.progress-bar {
+  height:100%; border-radius:100px;
+  background:linear-gradient(90deg, #7c3aed 0%, #a855f7 50%, #06b6d4 100%);
+  background-size:200% 100%;
+  transition:width 0.6s cubic-bezier(0.4,0,0.2,1);
+  box-shadow:0 0 12px rgba(124,58,237,0.55), 0 0 24px rgba(124,58,237,0.2);
+  position:relative; overflow:hidden;
+  animation:barShimmer 2.4s linear infinite;
+}
+@keyframes barShimmer {
+  0%   { background-position:200% 0; }
+  100% { background-position:-200% 0; }
+}
+/* Animated leading dot on progress bar */
+.progress-bar::after {
+  content:''; position:absolute; right:-1px; top:50%;
+  transform:translateY(-50%);
+  width:12px; height:12px; border-radius:50%;
+  background:white;
+  box-shadow:0 0 8px rgba(124,58,237,0.9), 0 0 16px rgba(124,58,237,0.5);
+  transition:opacity 0.3s;
+}
+
+/* Section dimension pill (shows current quiz section) */
+.section-pill {
+  display:inline-flex; align-items:center; gap:5px;
+  background:rgba(124,58,237,0.1); border:1px solid rgba(124,58,237,0.22);
+  border-radius:100px; padding:3px 11px;
+  font-size:11px; color:#a78bfa; letter-spacing:0.05em;
+  margin-top:2px; align-self:flex-start;
+  transition:all 0.3s;
+}
+
+/* Step dots strip (kept below progress bar, smaller) */
+.step-dots { display:flex; align-items:center; gap:3px; width:100%; margin-top:6px; }
+.step-dot {
+  height:4px; border-radius:100px;
+  background:rgba(255,255,255,0.07);
+  transition:all 0.35s cubic-bezier(0.4,0,0.2,1);
+  flex:1; min-width:2px; max-width:18px;
+}
+.step-dot.done {
+  background:rgba(124,58,237,0.6);
+}
+.step-dot.current {
+  background:linear-gradient(90deg,var(--accent2),var(--accent1));
+  box-shadow:0 0 6px rgba(124,58,237,0.6);
+  max-width:26px;
+}
+@keyframes dotPulse{0%,100%{box-shadow:0 0 6px rgba(124,58,237,0.6);}50%{box-shadow:0 0 14px rgba(124,58,237,0.9);}}
+
+/* ── QUESTION ── */
+.question-card{width:100%;background:var(--card);border:1px solid var(--border);border-radius:24px;padding:clamp(22px,4vw,36px);margin-bottom:18px;position:relative;overflow:hidden;}
+.question-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent1),var(--accent2));}
+.q-section-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.25);border-radius:100px;padding:3px 10px;font-size:11px;color:#a78bfa;margin-bottom:12px;letter-spacing:0.06em;}
+.q-text{font-size:clamp(15px,3vw,18px);font-weight:500;line-height:1.65;color:var(--text);}
+
+/* Likert scale options */
+.likert-grid{width:100%;display:grid;gap:9px;margin-top:4px;}
+.likert-btn{display:flex;align-items:center;gap:12px;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:13px 18px;cursor:pointer;text-align:left;transition:all 0.2s;color:var(--text);font-size:clamp(12px,2.5vw,14px);font-family:'Noto Sans SC',sans-serif;line-height:1.4;position:relative;overflow:hidden;}
+.likert-dot{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--muted);transition:all 0.2s;flex-shrink:0;}
+.likert-btn:hover{border-color:rgba(124,58,237,0.5);background:rgba(124,58,237,0.08);transform:translateX(3px);}
+.likert-btn:hover .likert-dot{background:var(--accent1);border-color:var(--accent1);color:white;}
+.likert-btn.selected{
+  border-color:var(--accent1);
+  background:rgba(124,58,237,0.18);
+  box-shadow:0 0 20px rgba(124,58,237,0.22), inset 0 0 0 1px rgba(124,58,237,0.3);
+  color:#e9d5ff;
+}
+.likert-btn.selected .likert-dot{
+  background:linear-gradient(135deg,var(--accent1),#9333ea);
+  border-color:var(--accent1);
+  color:white;
+  box-shadow:0 0 10px rgba(124,58,237,0.6);
+}
+.likert-btn.selected::after{
+  content:'✓ 已选';
+  position:absolute; right:14px; top:50%; transform:translateY(-50%);
+  font-size:11px; color:rgba(167,139,250,0.7); font-weight:500; letter-spacing:0.04em;
+}
+.likert-score-hint{font-size:10px;color:var(--muted);margin-left:auto;flex-shrink:0;padding-left:8px;}
+
+/* ── REPORT PAGE ── */
+/* Hero */
+.report-hero{width:100%;background:linear-gradient(135deg,rgba(124,58,237,0.18),rgba(6,182,212,0.1));border:1px solid rgba(124,58,237,0.25);border-radius:24px;padding:clamp(24px,5vw,40px);margin-bottom:20px;text-align:center;position:relative;overflow:hidden;}
+.report-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent1),var(--accent2),var(--accent3));}
+.report-date{font-size:11px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px;}
+.report-crown{font-size:56px;display:block;margin-bottom:12px;animation:crownPop 0.6s cubic-bezier(0.34,1.56,0.64,1) both;}
+@keyframes crownPop{from{transform:scale(0) rotate(-15deg);opacity:0;}to{transform:scale(1) rotate(0deg);opacity:1;}}
+.report-primary-label{font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:var(--muted);margin-bottom:6px;}
+.report-primary-name{font-family:'Syne',sans-serif;font-size:clamp(26px,6vw,44px);font-weight:800;background:linear-gradient(135deg,#fff,#c4b5fd,#67e8f9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px;}
+.report-tagline{font-size:14px;color:var(--muted);line-height:1.7;max-width:440px;margin:0 auto 20px;}
+.report-secondary-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+.secondary-badge{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:100px;padding:6px 14px;font-size:12px;color:var(--muted);}
+.secondary-badge .sb-icon{font-size:14px;}
+.secondary-badge .sb-label{font-size:11px;color:#a78bfa;}
+
+/* Section headers */
+.report-section{width:100%;margin-bottom:20px;}
+.section-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.section-icon-wrap{width:36px;height:36px;border-radius:12px;background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.3);display:flex;align-items:center;justify-content:center;font-size:18px;}
+.section-title{font-size:15px;font-weight:700;color:var(--text);}
+.section-sub{font-size:12px;color:var(--muted);margin-left:auto;}
+
+/* Radar chart */
+.radar-wrap{width:100%;background:var(--card);border:1px solid var(--border);border-radius:24px;padding:clamp(18px,4vw,30px);margin-bottom:20px;display:flex;flex-direction:column;align-items:center;}
+.radar-canvas{display:block;width:100%;max-width:320px;height:320px;}
+
+/* Dimension bars */
+.dim-list{width:100%;background:var(--card);border:1px solid var(--border);border-radius:24px;padding:clamp(18px,4vw,30px);margin-bottom:20px;}
+.dim-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.dim-row:last-child{margin-bottom:0;}
+.dim-letter{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent1),#9333ea);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0;}
+.dim-name{min-width:80px;font-size:13px;color:var(--text);}
+.dim-bar-wrap{flex:1;height:8px;background:rgba(255,255,255,0.06);border-radius:100px;overflow:hidden;}
+.dim-bar-fill{height:100%;border-radius:100px;transition:width 1.2s cubic-bezier(0.4,0,0.2,1);width:0;}
+.dim-score{font-size:12px;min-width:50px;text-align:right;}
+.dim-tag{font-size:10px;padding:2px 8px;border-radius:100px;white-space:nowrap;flex-shrink:0;}
+.dim-tag.high{background:rgba(124,58,237,0.15);color:#c4b5fd;border:1px solid rgba(124,58,237,0.3);}
+.dim-tag.mid{background:rgba(6,182,212,0.12);color:#67e8f9;border:1px solid rgba(6,182,212,0.25);}
+.dim-tag.low{background:rgba(255,255,255,0.06);color:var(--muted);border:1px solid var(--border);}
+
+/* Talent deep cards */
+.talent-deep-card{width:100%;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px 22px;margin-bottom:14px;animation:cardRise 0.5s ease both;}
+@keyframes cardRise{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.talent-deep-card.primary{border-color:rgba(124,58,237,0.4);background:linear-gradient(135deg,rgba(124,58,237,0.08),rgba(6,182,212,0.04));}
+.tdc-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.tdc-icon-wrap{width:48px;height:48px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;background:rgba(124,58,237,0.15);}
+.tdc-meta{flex:1;}
+.tdc-label{font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:3px;}
+.tdc-name{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--text);}
+.tdc-score-badge{font-size:11px;padding:3px 10px;border-radius:100px;background:rgba(124,58,237,0.15);color:#a78bfa;border:1px solid rgba(124,58,237,0.3);}
+.tdc-core-value{background:rgba(124,58,237,0.1);border-left:3px solid var(--accent1);border-radius:0 10px 10px 0;padding:12px 16px;margin-bottom:14px;font-size:13px;font-weight:500;color:#e0d0ff;line-height:1.7;}
+.tdc-section{margin-bottom:12px;}
+.tdc-section-title{font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.tdc-section-title::before{content:'';width:16px;height:1px;background:var(--muted);}
+.tdc-traits{display:flex;flex-wrap:wrap;gap:6px;}
+.tdc-trait{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:12px;color:var(--muted);line-height:1.4;}
+.career-tag-wrap{display:flex;flex-wrap:wrap;gap:6px;}
+.career-tag{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);color:#fcd34d;border-radius:100px;padding:4px 12px;font-size:12px;font-weight:500;}
+
+/* Growth section */
+.growth-card{width:100%;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px 22px;margin-bottom:14px;display:flex;gap:14px;align-items:flex-start;}
+.growth-card:hover{transform:translateY(-2px);border-color:rgba(124,58,237,0.22);transition:all 0.2s;}
+.growth-icon{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.growth-icon.purple{background:rgba(124,58,237,0.15);}
+.growth-icon.cyan{background:rgba(6,182,212,0.12);}
+.growth-icon.amber{background:rgba(245,158,11,0.12);}
+.growth-icon.green{background:rgba(16,185,129,0.12);}
+.growth-body{flex:1;}
+.growth-label{font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:4px;}
+.growth-content{font-size:13px;color:#d0d0f0;line-height:1.8;}
+.growth-content strong{color:var(--text);font-weight:600;}
+
+/* Share nudge */
+.share-nudge{width:100%;margin-top:4px;margin-bottom:16px;border-radius:20px;background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(6,182,212,0.06));border:1px solid rgba(16,185,129,0.2);padding:20px 24px;display:flex;align-items:flex-start;gap:14px;}
+.share-nudge-emoji{font-size:28px;flex-shrink:0;margin-top:2px;}
+.share-nudge-body{flex:1;}
+.share-nudge-title{font-size:15px;font-weight:600;color:#6ee7b7;margin-bottom:6px;}
+.share-nudge-text{font-size:13px;color:var(--muted);line-height:1.75;}
+.share-nudge-text span{color:#a7f3d0;}
+.share-nudge-link{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px;width:100%;background:linear-gradient(135deg,#059669,#10b981);border:none;border-radius:14px;padding:14px 20px;font-size:15px;font-weight:700;color:white;cursor:pointer;transition:all 0.2s;font-family:'Noto Sans SC',sans-serif;box-shadow:0 0 28px rgba(16,185,129,0.35);position:relative;overflow:hidden;letter-spacing:0.02em;}
+.share-nudge-link:hover{transform:translateY(-2px);box-shadow:0 6px 36px rgba(16,185,129,0.5);}
+.share-nudge-link:active{transform:translateY(0);}
+
+/* Bottom actions – two equal-weight buttons side by side */
+.result-actions {
+  display:grid; grid-template-columns:1fr 2fr; gap:12px;
+  width:100%; margin-top:4px; margin-bottom:24px;
+}
+/* Shared base */
+.result-actions button {
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  border-radius:14px; padding:15px 16px;
+  font-size:14px; font-weight:600;
+  font-family:'Noto Sans SC',sans-serif;
+  cursor:pointer; transition:all 0.2s;
+  letter-spacing:0.02em; line-height:1;
+  white-space:nowrap;
+}
+/* Primary: save – solid gradient, prominent */
+.btn-save {
+  background:linear-gradient(135deg, #7c3aed, #9333ea);
+  border:none;
+  color:#fff;
+  box-shadow:0 0 28px rgba(124,58,237,0.45);
+  position:relative; overflow:hidden;
+}
+.btn-save::before {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(135deg,transparent,rgba(255,255,255,0.1),transparent);
+  transform:translateX(-100%); transition:transform 0.4s;
+}
+.btn-save:hover {
+  transform:translateY(-2px);
+  box-shadow:0 6px 36px rgba(124,58,237,0.6);
+}
+.btn-save:hover::before { transform:translateX(100%); }
+.btn-save:active { transform:translateY(0); }
+
+/* Secondary: back home – ghost */
+.btn-back-home {
+  background:rgba(255,255,255,0.04);
+  border:1.5px solid rgba(255,255,255,0.1);
+  color:var(--muted);
+  width:auto; margin-bottom:0;
+}
+.btn-back-home:hover {
+  background:rgba(255,255,255,0.08);
+  border-color:rgba(255,255,255,0.2);
+  color:var(--text);
+  transform:translateY(-2px);
+}
+.btn-back-home:active { transform:translateY(0); }
+.btn-view-report {
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  margin-top:14px;
+  background:transparent;
+  border:1.5px solid rgba(124,58,237,0.4);
+  border-radius:14px; padding:14px 32px;
+  font-size:15px; font-weight:600; color:#a78bfa;
+  font-family:'Noto Sans SC',sans-serif;
+  cursor:pointer; transition:all 0.2s; letter-spacing:0.02em;
+  position:relative; overflow:hidden;
+}
+.btn-view-report:hover {
+  background:rgba(124,58,237,0.1); border-color:rgba(124,58,237,0.7);
+  color:#c4b5fd; transform:translateY(-2px);
+  box-shadow:0 4px 24px rgba(124,58,237,0.2);
+}
+.btn-view-report:active { transform:translateY(0); }
+
+/* Already-done screen */
+.done-screen-content{text-align:center;padding:40px 20px;}
+.done-icon{font-size:60px;margin-bottom:20px;display:block;}
+.done-title{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;background:linear-gradient(135deg,#fff,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px;}
+.done-sub{font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:32px;}
+
+/* Misc */
+.confetti-piece{position:fixed;width:8px;height:8px;top:-10px;border-radius:2px;animation:confettiFall linear forwards;z-index:100;pointer-events:none;}
+@keyframes confettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1;}100%{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);border:1px solid rgba(16,185,129,0.4);color:#10b981;padding:14px 24px;border-radius:100px;font-size:14px;font-weight:500;z-index:9999;transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.q-out{animation:qOut 0.22s ease forwards;}
+@keyframes qOut{to{opacity:0;transform:translateX(-28px);}}
+.q-in{animation:qIn 0.3s ease both;}
+@keyframes qIn{from{opacity:0;transform:translateX(28px);}to{opacity:1;transform:translateX(0);}}
+.q-back-out{animation:qBackOut 0.22s ease forwards;}
+@keyframes qBackOut{to{opacity:0;transform:translateX(28px);}}
+.q-back-in{animation:qBackIn 0.3s ease both;}
+@keyframes qBackIn{from{opacity:0;transform:translateX(-28px);}to{opacity:1;transform:translateX(0);}}
+@media(max-width:520px){
+  .container{padding:14px;}
+  .dim-name{min-width:60px;font-size:12px;}
+  .dim-tag{display:none;}
+  .tdc-traits .tdc-trait{font-size:11px;}
+  .growth-card{gap:10px;}
+  .growth-icon{width:36px;height:36px;font-size:17px;}
+  .btn-back{padding:0 12px;font-size:13px;}
+  .share-nudge{padding:16px 18px;gap:10px;}
+}
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
+<div class="toast" id="toast"></div>
+
+<div class="container">
+
+<!-- Welcome -->
+<div class="screen active" id="screen-welcome">
+  <div class="welcome-badge">专业测评 · 精美报告</div>
+  <h1 class="hero-title">发现你的<br>天赋密码</h1>
+  <p class="hero-sub">基于<span>多元智能理论</span>与<span>积极心理学</span>，<br>30道科学题目，生成你的专属天赋报告</p>
+  <div class="talent-chips">
+    <div class="chip"><span class="emoji">🧠</span>逻辑分析</div>
+    <div class="chip"><span class="emoji">🎨</span>创新创造</div>
+    <div class="chip"><span class="emoji">🗣️</span>语言表达</div>
+    <div class="chip"><span class="emoji">👑</span>领导力</div>
+    <div class="chip"><span class="emoji">🤝</span>共情协作</div>
+    <div class="chip"><span class="emoji">⚡</span>执行力</div>
+  </div>
+  <div class="meta-row">
+    <div class="meta-item"><div class="dot"></div> 30道题目</div>
+    <div class="meta-item"><div class="dot"></div> 约8分钟</div>
+    <div class="meta-item"><div class="dot"></div> 6大维度</div>
+  </div>
+  <button class="btn-primary" onclick="startQuiz()"><span>✦</span> 开始天赋测评</button>
+  <!-- 已完成测试用户入口（JS控制显隐） -->
+  <button class="btn-view-report" id="btn-view-report-welcome" style="display:none" onclick="viewReport()">📋 查看我的测评报告</button>
+</div>
+
+<!-- Already done -->
+<div class="screen" id="screen-done">
+  <div class="done-screen-content">
+    <span class="done-icon">📋</span>
+    <div class="done-title">你已完成测评</div>
+    <div class="done-sub">每份报告都是独一无二的。<br>你的专属天赋报告已经生成，现在去查看吧。</div>
+    <button class="btn-primary" onclick="viewReport()"><span>✦</span> 查看我的测评报告</button>
+  </div>
+</div>
+
+<!-- Quiz -->
+<div class="screen" id="screen-quiz">
+  <div class="quiz-header">
+    <!-- Row 1: back btn + progress info -->
+    <div class="quiz-header-top">
+      <button class="btn-back" id="btn-back" onclick="goBack()" disabled>← 上一题</button>
+      <div class="progress-info">
+        <div class="progress-text-row">
+          <span class="progress-label">第 <span id="q-current">1</span> / <span id="q-total">30</span> 题</span>
+          <div class="progress-fraction">
+            <span class="progress-current" id="q-current-big">1</span>
+            <span class="progress-total"> / 30</span>
+          </div>
+          <span class="progress-pct-badge" id="progress-pct">0%</span>
+        </div>
+        <!-- Progress track -->
+        <div class="progress-track">
+          <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+        </div>
+        <!-- Mini dot strip -->
+        <div class="step-dots" id="step-dots"></div>
+        <!-- Section pill -->
+        <div class="section-pill" id="section-pill">逻辑分析</div>
+      </div>
+    </div>
+  </div>
+  <div class="question-card" id="question-card">
+    <div class="q-section-badge" id="q-section">维度</div>
+    <p class="q-text" id="q-text">题目</p>
+  </div>
+  <div class="likert-grid" id="options-grid"></div>
+</div>
+
+<!-- Report -->
+<div class="screen" id="screen-result">
+
+  <!-- Hero -->
+  <div class="report-hero">
+    <div class="report-date" id="report-date">测评报告</div>
+    <span class="report-crown" id="result-icon">🏆</span>
+    <div class="report-primary-label">主导天赋类型</div>
+    <div class="report-primary-name" id="result-type" onclick="secretReset()" style="cursor:default;user-select:none;">天赋探索者</div>
+    <div class="report-tagline" id="result-tagline">你的独特天赋正在绽放...</div>
+    <div class="report-secondary-row" id="secondary-badges"></div>
+  </div>
+
+  <!-- Radar -->
+  <div class="radar-wrap report-section">
+    <div class="section-header" style="width:100%">
+      <div class="section-icon-wrap">📡</div>
+      <div class="section-title">天赋能力图谱</div>
+      <div class="section-sub">6维度全景</div>
+    </div>
+    <canvas class="radar-canvas" id="radar-canvas"></canvas>
+  </div>
+
+  <!-- Dimension bars -->
+  <div class="dim-list report-section">
+    <div class="section-header">
+      <div class="section-icon-wrap">📊</div>
+      <div class="section-title">各维度天赋指数</div>
+    </div>
+    <div id="dim-container"></div>
+  </div>
+
+  <!-- Primary talent deep dive -->
+  <div class="report-section">
+    <div class="section-header">
+      <div class="section-icon-wrap">👑</div>
+      <div class="section-title">核心天赋深度解读</div>
+    </div>
+    <div id="talent-deep-container"></div>
+  </div>
+
+  <!-- Growth -->
+  <div class="report-section">
+    <div class="section-header">
+      <div class="section-icon-wrap">🌱</div>
+      <div class="section-title">成长发展建议</div>
+    </div>
+    <div id="growth-container"></div>
+  </div>
+
+  <!-- Share -->
+  <div class="share-nudge">
+    <div class="share-nudge-emoji">💌</div>
+    <div class="share-nudge-body">
+      <div class="share-nudge-title">你身边的人知道自己的天赋吗？</div>
+      <div class="share-nudge-text">如果这份报告对你有价值，<span>把它分享给你在意的人</span>——也许能帮他们找到自己的方向 ✨</div>
+      <div class="share-nudge-link" onclick="sfx.share();shareResult()">📤 一键分享给Ta</div>
+    </div>
+  </div>
+
+  <div class="result-actions">
+    <button class="btn-back-home" onclick="goHome()">← 首页</button>
+    <button class="btn-save" onclick="sfx.save();saveResult()">📥 保存长图报告</button>
+  </div>
+
+</div>
+</div><!-- /container -->
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// CONSTANTS
+// ══════════════════════════════════════════════════════════════
+const STORAGE_KEY = 'talent_quiz_result_v2';
+
+// 6 dimensions
+const DIMS = {
+  logic:    { name:'逻辑分析', icon:'🧠', color:'#7c3aed', gradient:'linear-gradient(90deg,#7c3aed,#9333ea)', max:25 },
+  creative: { name:'创新创造', icon:'🎨', color:'#ec4899', gradient:'linear-gradient(90deg,#ec4899,#db2777)', max:25 },
+  language: { name:'语言表达', icon:'🗣️', color:'#06b6d4', gradient:'linear-gradient(90deg,#06b6d4,#0891b2)', max:25 },
+  leader:   { name:'领导力',   icon:'👑', color:'#f59e0b', gradient:'linear-gradient(90deg,#f59e0b,#d97706)', max:25 },
+  empathy:  { name:'共情协作', icon:'🤝', color:'#10b981', gradient:'linear-gradient(90deg,#10b981,#059669)', max:25 },
+  execute:  { name:'执行力',   icon:'⚡', color:'#8b5cf6', gradient:'linear-gradient(90deg,#8b5cf6,#7c3aed)', max:25 },
+};
+
+// Likert labels: value 1-5
+const LIKERT = [
+  { label:'非常不同意', short:'1', val:1 },
+  { label:'不太同意',   short:'2', val:2 },
+  { label:'一般般',     short:'3', val:3 },
+  { label:'比较同意',   short:'4', val:4 },
+  { label:'非常同意',   short:'5', val:5 },
+];
+
+// 30 questions – each maps score to one or two dims (weight 1 or 0.5)
+// dim weights: { dimKey: multiplier }  multiplier = score * weight
+const QUESTIONS = [
+  // ── LOGIC (Q1-5) ──
+  { section:'逻辑分析', text:'我喜欢将复杂的问题分解成更小的部分来逐步解决。', dims:{ logic:1 } },
+  { section:'逻辑分析', text:'面对不确定的情况，我倾向于先收集数据、再做决定。', dims:{ logic:1 } },
+  { section:'逻辑分析', text:'我能快速找出论述中的逻辑漏洞或矛盾之处。', dims:{ logic:1 } },
+  { section:'逻辑分析', text:'我享受解谜、推理游戏或数学挑战带来的满足感。', dims:{ logic:1, execute:0.3 } },
+  { section:'逻辑分析', text:'我善于建立系统化的分析框架来处理信息。', dims:{ logic:1, leader:0.3 } },
+  // ── CREATIVE (Q6-10) ──
+  { section:'创新创造', text:'我经常能想到别人没有考虑过的新奇解决方案。', dims:{ creative:1 } },
+  { section:'创新创造', text:'我喜欢尝试新事物，即使可能失败也不影响我的热情。', dims:{ creative:1, execute:0.3 } },
+  { section:'创新创造', text:'我会从不相关的领域中找到灵感，并将其应用到当前问题。', dims:{ creative:1, logic:0.3 } },
+  { section:'创新创造', text:'在做创意工作时，我常常进入心流状态，忘记时间流逝。', dims:{ creative:1 } },
+  { section:'创新创造', text:'我相信现有的方式总有可以改进的地方。', dims:{ creative:1, leader:0.3 } },
+  // ── LANGUAGE (Q11-15) ──
+  { section:'语言表达', text:'我能用简单的语言把复杂的概念解释清楚。', dims:{ language:1 } },
+  { section:'语言表达', text:'我在演讲或写作时，能够让听众/读者产生共鸣。', dims:{ language:1, empathy:0.3 } },
+  { section:'语言表达', text:'我能察觉到对话中微妙的情绪变化，并灵活调整表达方式。', dims:{ language:1, empathy:0.4 } },
+  { section:'语言表达', text:'我善于用故事或比喻来传递观点，让信息更容易被记住。', dims:{ language:1, creative:0.3 } },
+  { section:'语言表达', text:'在谈判或说服场合，我能找到合适的措辞化解分歧。', dims:{ language:1, empathy:0.3 } },
+  // ── LEADER (Q16-20) ──
+  { section:'领导力', text:'在团队中，我自然而然地承担起协调和方向把控的角色。', dims:{ leader:1 } },
+  { section:'领导力', text:'我善于发现团队成员的优势，并将合适的人分配到合适的位置。', dims:{ leader:1, empathy:0.3 } },
+  { section:'领导力', text:'面对危机或模糊情况，我能保持冷静并带领团队找到出路。', dims:{ leader:1, execute:0.3 } },
+  { section:'领导力', text:'我能制定清晰的愿景，并让他人愿意为之努力。', dims:{ leader:1, language:0.3 } },
+  { section:'领导力', text:'我擅长在不同利益方之间找到平衡点，推动共识达成。', dims:{ leader:1, empathy:0.4 } },
+  // ── EMPATHY (Q21-25) ──
+  { section:'共情协作', text:'我能快速感知到他人情绪的变化，即使对方没有明说。', dims:{ empathy:1 } },
+  { section:'共情协作', text:'与人交流时，我更注重建立真实的连接，而不只是传递信息。', dims:{ empathy:1 } },
+  { section:'共情协作', text:'我愿意花时间倾听他人的困扰，并能给予有效的支持。', dims:{ empathy:1 } },
+  { section:'共情协作', text:'在团队合作中，我总是关注成员之间的关系和氛围。', dims:{ empathy:1, leader:0.3 } },
+  { section:'共情协作', text:'我相信理解他人的视角，是解决大多数冲突的关键。', dims:{ empathy:1, leader:0.3 } },
+  // ── EXECUTE (Q26-30) ──
+  { section:'执行力', text:'一旦制定计划，我会持续推进，直到完成目标。', dims:{ execute:1 } },
+  { section:'执行力', text:'我能在资源有限的情况下，仍然高效地完成任务。', dims:{ execute:1, logic:0.3 } },
+  { section:'执行力', text:'相比反复讨论，我更倾向于先行动，再根据反馈调整。', dims:{ execute:1 } },
+  { section:'执行力', text:'我能将长期目标分解为可操作的短期行动步骤。', dims:{ execute:1, logic:0.4 } },
+  { section:'执行力', text:'即使遇到挫折，我也能快速调整状态，继续前进。', dims:{ execute:1 } },
+];
+
+// Profiles for each dimension as primary
+const PROFILES = {
+  logic: {
+    title:'洞察分析师', icon:'🧠', tagline:'你的思维是精密的推理引擎，善于在复杂中发现秩序',
+    coreValue:'你的核心价值是"让模糊变清晰，让复杂变简单"。在信息爆炸的时代，能系统梳理数据、推导结论的人，是团队和组织的稀缺资产。',
+    description:'你拥有<strong>卓越的逻辑分析能力</strong>，善于将复杂问题结构化分解，能在海量信息中快速提炼关键规律。你的思维严密、推论清晰，在面对不确定性时往往比别人更早找到答案。',
+    traits:['能快速识别问题本质和因果关系','在混乱中建立有序的分析框架','对数据和证据有天然的感知力','思维严谨，不轻易被表面现象误导','善于发现他人忽略的细节和逻辑漏洞'],
+    careers:['数据科学家','战略分析师','产品经理','投资研究员','科学研究员','法律顾问','系统架构师'],
+    growth:'尝试将你的分析结论用更直观的方式呈现（图表、故事），让不擅长逻辑思维的人也能理解你的洞察——这将使你的影响力成倍扩大。',
+    workplace:['制定数据驱动的决策方案','梳理复杂业务流程，找出瓶颈','担任项目的"风险把控官"','进行市场或竞品深度分析'],
+  },
+  creative: {
+    title:'创意先锋者', icon:'🎨', tagline:'你的想象力是无边的画布，能将不可能变为可能',
+    coreValue:'你的核心价值是"打破既有边界，创造新的可能"。在同质化严重的世界里，真正的原创思维是最稀缺也是最有价值的资产。',
+    description:'你拥有<strong>天才般的创造与创新智能</strong>，能以独特视角感知世界，总在寻找新的可能性。你不满足于现有答案，这种"为什么不能不同？"的本能，是创新最原始的驱动力。',
+    traits:['能从不同领域获取灵感并跨界融合','对新事物有强烈的好奇心和探索欲','善于用全新的视角重新定义问题','创作时能进入深度专注的心流状态','乐于突破常规，愿意承担创新风险'],
+    careers:['创意总监','产品设计师','品牌策划','游戏设计师','导演/编剧','营销策略师','创业者'],
+    growth:'给自己设定定期的"创作实验时间"，不设目标、不设限制地探索一个新领域或新媒介——最惊艳的创意往往来自最意外的地方。',
+    workplace:['为团队提供突破性的创意方案','设计用户体验和品牌故事','探索新兴市场和商业模式','把抽象的愿景转化为具体的概念'],
+  },
+  language: {
+    title:'语言魔法师', icon:'🗣️', tagline:'文字在你手中如魔法流动，你能用语言改变他人的世界',
+    coreValue:'你的核心价值是"让复杂变简单，让沟通变顺畅"。能把话说清楚、写明白的人，往往比专业能力强但表达不行的人更容易被看见、被记住。',
+    description:'你拥有<strong>天赋的语言智慧</strong>，能精准、优美地表达思想与情感。你对语言的力量有天然感知，无论书面还是口头，都能让复杂的想法变得清晰动人，引发共鸣。',
+    traits:['用文字和声音"编织意义"的天然能力','表达时能快速组织思路，说清复杂的事','善于在请求帮助或协调分歧时找到合适的词','阅读、写作时很快能进入专注状态','对语气和用词的微妙差异极为敏感'],
+    careers:['内容创作者','教育培训师','公关传播','法律顾问','编剧作家','市场营销','演讲教练'],
+    growth:'持续积累跨领域词汇，阅读不同文化背景的文学作品。你的语言天赋+更深厚的知识积累，将使你的表达越来越有穿透力。',
+    workplace:['撰写方案、汇报等关键书面材料','主持会议或项目复盘，帮团队理清思路','对外沟通谈判，化解分歧推进合作','培训分享或知识输出，把专业内容讲得通俗易懂'],
+  },
+  leader: {
+    title:'天生领航者', icon:'👑', tagline:'人心是你的地图，方向是你的本能，你生来就是带路的人',
+    coreValue:'你的核心价值是"凝聚力量，指明方向"。真正的领导者不是命令别人，而是让别人愿意跟随——你天生拥有这种吸引力。',
+    description:'你拥有<strong>出众的领导与战略智能</strong>，能快速感知团队态势，制定清晰方向，并激励他人全力投入。你善于在复杂局面中保持清醒，成为他人信赖的定盘星。',
+    traits:['在团队中自然承担方向把控的角色','能识别每个人的优势并发挥其最大价值','面对危机时能保持冷静，给出清晰判断','善于建立共识，推动不同观点达成一致','制定的目标既有感召力，又切实可执行'],
+    careers:['创业者/CEO','项目总监','战略顾问','产品负责人','团队教练','政策制定者','社区/组织运营者'],
+    growth:'刻意练习"服务式领导力"——花更多时间了解团队成员的真实需求和成长障碍，而不只是关注任务结果。最强的领导者都是最懂人的人。',
+    workplace:['负责团队/项目的整体方向把控','在关键决策节点提供清晰判断','推动跨部门协作和资源整合','制定中长期战略规划'],
+  },
+  empathy: {
+    title:'人心连接者', icon:'🤝', tagline:'你拥有读懂人心的天赋，能建立他人永远记得的连接',
+    coreValue:'你的核心价值是"让每个人感到被理解、被重视"。在一个人们普遍感到孤独的世界里，真正的共情能力是最珍贵的超能力。',
+    description:'你拥有<strong>深厚的共情与人际智能</strong>，能快速感知他人情绪，建立深度信任关系。你让别人感到被看见、被理解，这是所有真实连接和合作成功的基础。',
+    traits:['快速感知他人情绪，即使对方未表达','在他人困难时能提供真正有效的支持','善于营造让人感到安全的对话空间','能发现团队关系的裂缝并主动修复','在合作中关注"人"本身，而不只是任务'],
+    careers:['心理咨询师','用户研究员','人力资源','教育工作者','社会工作者','公益/NGO','客户成功经理'],
+    growth:'将你的共情天赋与专业领域结合——无论是产品设计、营销还是管理，能真正理解用户/客户/员工内心的人，做出的决策往往比数据驱动的决策更有温度也更有效果。',
+    workplace:['担任团队的"氛围官"，维护协作关系','进行用户/客户深度访谈','处理内部冲突，促进心理安全','设计关注人性的产品体验或服务流程'],
+  },
+  execute: {
+    title:'超级执行者', icon:'⚡', tagline:'你将想法变为现实的能力，是大多数人难以企及的超能力',
+    coreValue:'你的核心价值是"让计划真正落地，让目标真正实现"。世界上从不缺想法，缺的是能把想法变成结果的人——而你就是那个稀缺的人。',
+    description:'你拥有<strong>卓越的执行与推进智能</strong>，能将目标分解为可操作步骤，并在面对障碍时保持前进的动力。你的行动力和坚韧性，是将愿景变为现实的核心驱动力。',
+    traits:['将模糊目标转化为清晰可操作的行动计划','遇到挫折后能快速调整并继续推进','在资源有限的情况下仍能高效完成目标','善于优先级排序，聚焦最重要的事','有强烈的结果导向，对"完成"有强迫症般的满足感'],
+    careers:['项目经理','运营总监','创业者','职业经理人','供应链管理','活动策划','军事/应急管理'],
+    growth:'在强大的执行力基础上，有意识地培养"向上管理"和"战略思维"能力——不只做对的事，还要确保做的是最对的那件事。',
+    workplace:['负责项目从0到1的推进落地','制定并追踪OKR/KPI','处理突发情况，快速恢复项目进度','建立高效的工作流程和标准化操作'],
+  },
+};
+
+// ══════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════
+let currentQ = 0;
+let answers  = new Array(QUESTIONS.length).fill(null);
+let scores   = {};
+
+function initScores() {
+  scores = {};
+  Object.keys(DIMS).forEach(k => scores[k] = 0);
+}
+
+// ══════════════════════════════════════════════════════════════
+// SFX
+// ══════════════════════════════════════════════════════════════
+const sfx = (() => {
+  let ctx = null;
+  const init = () => { if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)(); return ctx; };
+  function play(freq, vol, atk, dec, type, freqEnd) {
+    try {
+      const c = init(), osc = c.createOscillator(), g = c.createGain(), now = c.currentTime;
+      osc.connect(g); g.connect(c.destination);
+      osc.type = type || 'sine'; osc.frequency.setValueAtTime(freq, now);
+      if (freqEnd) osc.frequency.linearRampToValueAtTime(freqEnd, now + atk + dec);
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(vol, now + atk);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + atk + dec);
+      osc.start(now); osc.stop(now + atk + dec + 0.05);
+    } catch(e) {}
+  }
+  return {
+    tap()     { play(480,0.15,0.007,0.10); play(720,0.06,0.007,0.07); },
+    next()    { play(300,0.10,0.01,0.18,'sine',580); },
+    back()    { play(520,0.09,0.01,0.18,'sine',260); },
+    celebrate(){ [[523,0],[659,60],[784,120],[1047,180]].forEach(([f,d])=>{ setTimeout(()=>play(f,0.11,0.01,0.85),d); setTimeout(()=>play(f*1.005,0.04,0.01,0.60),d+15); }); },
+    share()   { play(600,0.10,0.007,0.12); play(900,0.05,0.012,0.10); },
+    save()    { play(420,0.10,0.007,0.10); play(630,0.05,0.010,0.09); },
+    start()   { [330,415,523].forEach((f,i)=>setTimeout(()=>play(f,0.10,0.01,0.18),i*55)); },
+  };
+})();
+
+// ══════════════════════════════════════════════════════════════
+// STARS
+// ══════════════════════════════════════════════════════════════
+(function(){
+  const c = document.getElementById('stars');
+  for (let i=0;i<60;i++) {
+    const s = document.createElement('div'); s.className='star';
+    s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${2+Math.random()*4}s;--delay:${Math.random()*6}s;--op:${0.2+Math.random()*0.6};width:${1+Math.random()*2}px;height:${1+Math.random()*2}px;`;
+    c.appendChild(s);
+  }
+})();
+
+// ══════════════════════════════════════════════════════════════
+// INIT – check localStorage on load
+// ══════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = loadSavedResult();
+  if (saved) {
+    // User already completed test – show "done" screen, but ALSO expose
+    // the "view report" button on the welcome screen for any direct URL visits
+    showScreen('done');
+    revealViewReportBtn();
+  } else {
+    showScreen('welcome');
+  }
+});
+
+/** Show the "查看我的测评报告" entry on the welcome screen */
+function revealViewReportBtn() {
+  const btn = document.getElementById('btn-view-report-welcome');
+  if (btn) btn.style.display = 'inline-flex';
+}
+
+function loadSavedResult() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch(e) { return null; }
+}
+
+function saveToStorage(data) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+}
+
+function viewReport() {
+  const saved = loadSavedResult();
+  if (!saved) { showScreen('welcome'); return; }
+  scores = saved.scores;
+  renderReport(saved.date);
+}
+
+/** Go back to welcome / home, keeping report locked if test was done */
+function goHome() {
+  const saved = loadSavedResult();
+  showScreen('welcome');
+  if (saved) revealViewReportBtn();
+}
+
+// ══════════════════════════════════════════════════════════════
+// QUIZ FLOW
+// ══════════════════════════════════════════════════════════════
+function startQuiz() {
+  // ── One-time lock: if user already completed, show report instead ──
+  const saved = loadSavedResult();
+  if (saved) { viewReport(); return; }
+
+  sfx.start();
+  initScores();
+  currentQ = 0;
+  answers  = new Array(QUESTIONS.length).fill(null);
+  showScreen('quiz');
+  renderQuestion('in');
+}
+
+function renderDots() {
+  const c = document.getElementById('step-dots');
+  c.innerHTML = '';
+  QUESTIONS.forEach((_,i) => {
+    const d = document.createElement('div');
+    d.className = 'step-dot' + (i < currentQ ? ' done' : i === currentQ ? ' current' : '');
+    c.appendChild(d);
+  });
+}
+
+function renderQuestion(dir) {
+  const q = QUESTIONS[currentQ];
+  const total = QUESTIONS.length;
+  const pct = Math.round(currentQ / total * 100);
+
+  // Text counters
+  document.getElementById('q-current').textContent = currentQ + 1;
+  document.getElementById('q-total').textContent   = total;
+  document.getElementById('q-current-big').textContent = currentQ + 1;
+  // Update the "/ 30" text node in the fraction
+  const fracTotal = document.querySelector('.progress-total');
+  if (fracTotal) fracTotal.textContent = ' / ' + total;
+
+  // Progress bar + percentage badge
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-pct').textContent  = pct + '%';
+
+  // Back button state
+  document.getElementById('btn-back').disabled = currentQ === 0;
+
+  // Section pill
+  const pill = document.getElementById('section-pill');
+  if (pill) pill.textContent = q.section;
+
+  renderDots();
+
+  const anim = dir === 'back' ? 'q-back-in' : 'q-in';
+  document.getElementById('question-card').className = 'question-card ' + anim;
+  document.getElementById('options-grid').className  = 'likert-grid ' + anim;
+  document.getElementById('q-section').textContent    = q.section;
+  document.getElementById('q-text').textContent       = q.text;
+
+  const grid = document.getElementById('options-grid');
+  grid.innerHTML = '';
+  LIKERT.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'likert-btn' + (answers[currentQ] === i ? ' selected' : '');
+    btn.innerHTML = `<span class="likert-dot">${opt.short}</span><span>${opt.label}</span>`;
+    btn.onclick = () => selectAnswer(btn, opt, i);
+    grid.appendChild(btn);
+  });
+}
+
+function selectAnswer(btn, opt, idx) {
+  // 如果这道题已经有答案（返回后修改场景），先撤销旧分数
+  const prevIdx = answers[currentQ];
+  if (prevIdx !== null && prevIdx !== idx) {
+    const oldVal = LIKERT[prevIdx].val;
+    Object.entries(QUESTIONS[currentQ].dims).forEach(([k, w]) => {
+      scores[k] = Math.max(0, (scores[k] || 0) - oldVal * w);
+    });
+  }
+
+  // 标记选中
+  document.querySelectorAll('.likert-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  answers[currentQ] = idx;
+  sfx.tap();
+
+  setTimeout(() => {
+    sfx.next();
+    // 累加新分数（仅当不是撤销后原地重选同一选项）
+    if (prevIdx !== idx) {
+      Object.entries(QUESTIONS[currentQ].dims).forEach(([k, w]) => {
+        scores[k] = (scores[k] || 0) + opt.val * w;
+      });
+    }
+
+    const card = document.getElementById('question-card');
+    const grid = document.getElementById('options-grid');
+    card.className = 'question-card q-out';
+    grid.className = 'likert-grid q-out';
+
+    setTimeout(() => {
+      currentQ++;
+      if (currentQ >= QUESTIONS.length) finishQuiz();
+      else renderQuestion('in');
+    }, 230);
+  }, 420);
+}
+
+function goBack() {
+  if (currentQ === 0) return;
+  sfx.back();
+
+  // 撤销「当前题」已累加的分数（如果用户已选过）
+  const curAnswerIdx = answers[currentQ];
+  if (curAnswerIdx !== null) {
+    const val = LIKERT[curAnswerIdx].val;
+    Object.entries(QUESTIONS[currentQ].dims).forEach(([k, w]) => {
+      scores[k] = Math.max(0, (scores[k] || 0) - val * w);
+    });
+    // 不清除 answers[currentQ]，保留显示以便用户还可以看到自己选了什么
+  }
+
+  const card = document.getElementById('question-card');
+  const grid = document.getElementById('options-grid');
+  card.className = 'question-card q-back-out';
+  grid.className = 'likert-grid q-back-out';
+
+  setTimeout(() => { currentQ--; renderQuestion('back'); }, 220);
+}
+
+function finishQuiz() {
+  // Mark progress as complete
+  const bar = document.getElementById('progress-bar');
+  if (bar) bar.style.width = '100%';
+  const pctBadge = document.getElementById('progress-pct');
+  if (pctBadge) pctBadge.textContent = '100%';
+
+  const date = new Date().toLocaleDateString('zh-CN', { year:'numeric', month:'long', day:'numeric' });
+  saveToStorage({ scores, date });
+  renderReport(date);
+}
+
+// ══════════════════════════════════════════════════════════════
+// REPORT RENDERING
+// ══════════════════════════════════════════════════════════════
+function renderReport(date) {
+  document.getElementById('progress-bar').style.width = '100%';
+
+  const sorted = Object.entries(scores).sort((a,b) => b[1] - a[1]);
+  const [topKey] = sorted[0];
+  const [secKey] = sorted[1];
+  const profile = PROFILES[topKey];
+  const maxRaw  = sorted[0][1];
+
+  // Hero
+  document.getElementById('report-date').textContent = `测评报告 · ${date || ''}`;
+  document.getElementById('result-icon').textContent  = profile.icon;
+  document.getElementById('result-type').textContent  = profile.title;
+  document.getElementById('result-tagline').textContent = profile.tagline;
+
+  // Secondary badges
+  const secDiv = document.getElementById('secondary-badges');
+  secDiv.innerHTML = '';
+  sorted.slice(1, 3).forEach(([k]) => {
+    const d = DIMS[k];
+    const el = document.createElement('div');
+    el.className = 'secondary-badge';
+    el.innerHTML = `<span class="sb-icon">${d.icon}</span><span>${d.name}</span><span class="sb-label">副天赋</span>`;
+    secDiv.appendChild(el);
+  });
+
+  // Dimension bars
+  const dimContainer = document.getElementById('dim-container');
+  dimContainer.innerHTML = '';
+  const letters = 'ABCDEF';
+  sorted.forEach(([k, v], i) => {
+    const d = DIMS[k];
+    const maxPossible = d.max * 5; // max questions * max likert
+    const rawMax = maxRaw || 1;
+    const pct = Math.min(Math.round((v / (rawMax * 1.15)) * 100), 98);
+    const score = Math.round(v);
+    const tag = pct >= 72 ? ['非常擅长','high'] : pct >= 50 ? ['有些擅长','mid'] : ['待发展','low'];
+    const row = document.createElement('div'); row.className = 'dim-row';
+    row.innerHTML = `
+      <div class="dim-letter">${letters[i]}</div>
+      <div class="dim-name">${d.name}</div>
+      <div class="dim-bar-wrap"><div class="dim-bar-fill" data-pct="${pct}" style="background:${d.gradient}"></div></div>
+      <div class="dim-score" style="color:${d.color}">${score}</div>
+      <div class="dim-tag ${tag[1]}">${tag[0]}</div>`;
+    dimContainer.appendChild(row);
+  });
+
+  // Radar chart – defer by one frame so the screen is fully visible/laid-out
+  _radarSorted = sorted;
+  requestAnimationFrame(() => drawRadar(sorted));
+
+  // Deep talent cards (top 2)
+  const deepContainer = document.getElementById('talent-deep-container');
+  deepContainer.innerHTML = '';
+  [[topKey, 'primary'], [secKey, 'secondary']].forEach(([k, cls], ci) => {
+    const p = PROFILES[k]; const d = DIMS[k];
+    const pct = Math.min(Math.round((scores[k] / (maxRaw * 1.15)) * 100), 98);
+    const el = document.createElement('div');
+    el.className = `talent-deep-card ${cls}`;
+    el.style.animationDelay = (ci * 0.12) + 's';
+    el.innerHTML = `
+      <div class="tdc-header">
+        <div class="tdc-icon-wrap">${d.icon}</div>
+        <div class="tdc-meta">
+          <div class="tdc-label">${cls === 'primary' ? '主天赋' : '副天赋'}</div>
+          <div class="tdc-name">${p.title}</div>
+        </div>
+        <div class="tdc-score-badge">天赋指数 ${pct}%</div>
+      </div>
+      <div class="tdc-core-value">${p.coreValue}</div>
+      <div class="tdc-section">
+        <div class="tdc-section-title">你可能的特征</div>
+        <div class="tdc-traits">${p.traits.map(t=>`<div class="tdc-trait">✓ ${t}</div>`).join('')}</div>
+      </div>
+      <div class="tdc-section">
+        <div class="tdc-section-title">适合的职业方向</div>
+        <div class="career-tag-wrap">${p.careers.map(c=>`<span class="career-tag">${c}</span>`).join('')}</div>
+      </div>`;
+    deepContainer.appendChild(el);
+  });
+
+  // Growth cards
+  const growthContainer = document.getElementById('growth-container');
+  growthContainer.innerHTML = '';
+  const growthItems = [
+    { icon:'💡', cls:'purple', label:'核心优势', content: profile.description },
+    { icon:'🚀', cls:'cyan',   label:'发展方向建议', content: profile.growth },
+    { icon:'💼', cls:'amber',  label:'职场最佳应用场景', list: profile.workplace },
+    { icon:'🌱', cls:'green',  label:'成长下一步',
+      content:`你的<strong>${DIMS[topKey].name}</strong>已处于领先水平。接下来可以重点提升<strong>${DIMS[secKey].name}</strong>，两者结合将产生强大的复合优势。同时，关注自己相对较弱的维度，给它们一些适当的练习和发展空间。`
+    },
+  ];
+  growthItems.forEach((item, i) => {
+    const el = document.createElement('div');
+    el.className = 'growth-card';
+    el.style.animationDelay = (i * 0.09) + 's';
+    const listHTML = item.list ? `<ul style="margin-top:8px;padding-left:0;list-style:none;display:grid;gap:6px;">${item.list.map(l=>`<li style="background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.2);border-radius:8px;padding:7px 12px;font-size:12px;color:#c4b5fd;">→ ${l}</li>`).join('')}</ul>` : '';
+    el.innerHTML = `
+      <div class="growth-icon ${item.cls}">${item.icon}</div>
+      <div class="growth-body">
+        <div class="growth-label">${item.label}</div>
+        <div class="growth-content">${item.content || ''}${listHTML}</div>
+      </div>`;
+    growthContainer.appendChild(el);
+  });
+
+  showScreen('result');
+  launchConfetti();
+  sfx.celebrate();
+
+  // Animate bars after render
+  setTimeout(() => {
+    document.querySelectorAll('.dim-bar-fill').forEach(b => b.style.width = b.dataset.pct + '%');
+  }, 200);
+}
+
+// ══════════════════════════════════════════════════════════════
+// RADAR CHART (Canvas)
+// ══════════════════════════════════════════════════════════════
+function drawRadar(sorted) {
+  const canvas = document.getElementById('radar-canvas');
+  if (!canvas) return;
+
+  // ── Reliable size: use container width or fall back to a safe default.
+  // The screen may just have become visible, so offsetWidth could still be 0
+  // for one frame. We use a two-pass approach with requestAnimationFrame.
+  function paint() {
+    const dpr  = window.devicePixelRatio || 1;
+    const wrap = canvas.closest('.radar-wrap') || canvas.parentElement;
+    const containerW = wrap ? wrap.clientWidth : 340;
+    const padding    = 40;
+    const raw  = Math.max(containerW - padding * 2, 200); // never < 200
+    const size = Math.min(raw, 320);
+
+    canvas.style.width  = size + 'px';
+    canvas.style.height = size + 'px';
+    canvas.width  = size * dpr;
+    canvas.height = size * dpr;
+
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.scale(dpr, dpr);
+
+    const cx = size / 2;
+    const cy = size / 2;
+    // Leave ~22% margin on each side for labels
+    const r  = size * 0.34;
+    const n  = sorted.length; // 6
+
+    const maxVal = Math.max(...sorted.map(([,v]) => v), 1);
+
+    function angle(i) { return (Math.PI * 2 * i / n) - Math.PI / 2; }
+    function pt(i, ratio) {
+      return {
+        x: cx + r * ratio * Math.cos(angle(i)),
+        y: cy + r * ratio * Math.sin(angle(i)),
+      };
+    }
+
+    // ── Background rings (5 levels) ──
+    const rings = 5;
+    for (let ring = 1; ring <= rings; ring++) {
+      ctx.beginPath();
+      for (let i = 0; i < n; i++) {
+        const p = pt(i, ring / rings);
+        i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = ring === rings
+        ? 'rgba(255,255,255,0.12)'
+        : 'rgba(255,255,255,0.055)';
+      ctx.lineWidth = ring === rings ? 1.5 : 1;
+      ctx.stroke();
+    }
+
+    // ── Axis lines ──
+    for (let i = 0; i < n; i++) {
+      const p = pt(i, 1);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(p.x, p.y);
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+      ctx.lineWidth   = 1;
+      ctx.stroke();
+    }
+
+    // ── Data polygon fill (gradient) ──
+    const ratios = sorted.map(([, v]) => {
+      const normalized = v / (maxVal * 1.05);
+      return Math.min(Math.max(normalized, 0.08), 1);
+    });
+
+    // Outer glow first
+    ctx.save();
+    ctx.beginPath();
+    sorted.forEach((_, i) => {
+      const p = pt(i, ratios[i]);
+      i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+    });
+    ctx.closePath();
+    ctx.shadowColor = 'rgba(124,58,237,0.6)';
+    ctx.shadowBlur  = 18;
+    ctx.fillStyle   = 'rgba(124,58,237,0.18)';
+    ctx.fill();
+    ctx.restore();
+
+    // Solid polygon
+    ctx.beginPath();
+    sorted.forEach((_, i) => {
+      const p = pt(i, ratios[i]);
+      i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+    });
+    ctx.closePath();
+    ctx.fillStyle   = 'rgba(124,58,237,0.22)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(167,139,250,0.9)';
+    ctx.lineWidth   = 2;
+    ctx.stroke();
+
+    // ── Vertex dots ──
+    sorted.forEach((_, i) => {
+      const p = pt(i, ratios[i]);
+      // Glow halo
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(167,139,250,0.18)';
+      ctx.fill();
+      // Core dot
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#c4b5fd';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+      ctx.lineWidth   = 1.5;
+      ctx.stroke();
+    });
+
+    // ── Labels ──
+    // Load custom font if available; canvas falls back gracefully
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    const fontSize   = Math.max(Math.round(size * 0.038), 10);
+    ctx.font         = `500 ${fontSize}px 'Noto Sans SC', sans-serif`;
+
+    sorted.forEach(([k], i) => {
+      const labelRatio = 1.28;
+      const p = pt(i, labelRatio);
+      const d = DIMS[k];
+
+      // Score label (small, below dim name)
+      const score     = Math.round(sorted[i][1]);
+      const maxScore  = Math.round(maxVal);
+      const pct       = Math.min(Math.round((sorted[i][1] / (maxVal * 1.05)) * 100), 100);
+
+      // Dim name line
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.font      = `600 ${fontSize}px 'Noto Sans SC', sans-serif`;
+      ctx.fillText(d.icon + ' ' + d.name, p.x, p.y - 6);
+
+      // Score / pct line
+      ctx.font      = `400 ${Math.max(fontSize - 2, 9)}px 'Noto Sans SC', sans-serif`;
+      ctx.fillStyle = pct >= 70 ? '#c4b5fd' : 'rgba(180,180,210,0.6)';
+      ctx.fillText(pct + '%', p.x, p.y + 8);
+    });
+  }
+
+  // First attempt immediately; if size is still 0 (screen just became visible),
+  // retry after one animation frame.
+  paint();
+  if (canvas.width === 0) requestAnimationFrame(paint);
+}
+
+// Redraw radar on resize (handles orientation change / window resize)
+let _radarSorted = null;
+window.addEventListener('resize', () => {
+  if (_radarSorted) drawRadar(_radarSorted);
+});
+function launchConfetti() {
+  const colors = ['#7c3aed','#06b6d4','#f59e0b','#10b981','#f43f5e','#8b5cf6','#ec4899'];
+  for (let i = 0; i < 60; i++) setTimeout(() => {
+    const p = document.createElement('div'); p.className = 'confetti-piece';
+    p.style.cssText = `left:${Math.random()*100}%;background:${colors[~~(Math.random()*colors.length)]};width:${4+Math.random()*8}px;height:${4+Math.random()*8}px;border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${2+Math.random()*3}s;animation-delay:${Math.random()*.5}s;`;
+    document.body.appendChild(p); setTimeout(() => p.remove(), 5500);
+  }, i * 30);
+}
+
+// ══════════════════════════════════════════════════════════════
+// SHARE / SAVE
+// ══════════════════════════════════════════════════════════════
+function shareResult() {
+  const type = document.getElementById('result-type').textContent;
+  const tagline = document.getElementById('result-tagline').textContent;
+  const text = `🌟 我完成了天赋测评，结果是：${type}！\n"${tagline}"\n\n快来发现你的天赋密码～`;
+  if (navigator.share) { navigator.share({ title: '我的天赋报告', text }).catch(() => {}); }
+  else if (navigator.clipboard) { navigator.clipboard.writeText(text).then(() => showToast('✓ 已复制，快去分享！')); }
+  else { showToast('✓ 快截图分享给好友吧！'); }
+}
+
+function saveResult() {
+  sfx.save();
+  showToast('📸 正在生成长图，请稍候…');
+
+  // Defer to next frame so toast renders first
+  setTimeout(() => _renderAndDownload(), 80);
+}
+
+function _renderAndDownload() {
+  const sorted  = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  const maxRaw  = sorted[0][1] || 1;
+  const topKey  = sorted[0][0];
+  const secKey  = sorted[1][0];
+  const profile = PROFILES[topKey];
+  const type    = profile.title;
+  const date    = new Date().toLocaleDateString('zh-CN', { year:'numeric', month:'long', day:'numeric' });
+
+  // ── Canvas dimensions ──
+  const W   = 750;          // width (mobile-friendly when shared)
+  const PAD = 40;           // horizontal padding
+  const dpr = Math.min(window.devicePixelRatio || 2, 3);
+
+  // We'll grow height dynamically; use an offscreen canvas
+  // First pass: measure → set height → second pass: paint
+  _paintReport({ W, PAD, dpr, sorted, maxRaw, topKey, secKey, profile, type, date, measure: true },
+    (H) => {
+      _paintReport({ W, PAD, dpr, sorted, maxRaw, topKey, secKey, profile, type, date, measure: false, H },
+        null, (canvas) => {
+          try {
+            const a = document.createElement('a');
+            a.download = `天赋报告_${type}_${Date.now()}.png`;
+            a.href = canvas.toDataURL('image/png');
+            a.click();
+            showToast('✓ 长图已保存！');
+          } catch(e) {
+            showToast('✓ 长图已生成，请长按截图保存');
+          }
+        }
+      );
+    }
+  );
+}
+
+function _paintReport({ W, PAD, dpr, sorted, maxRaw, topKey, secKey, profile, type, date, measure, H }, measureCb, paintCb) {
+  // ── Helpers ──
+  const C  = W - PAD * 2;        // content width
+  const BG = '#0a0a14';
+  const CARD_BG   = '#1a1a2e';
+  const ACCENT    = '#7c3aed';
+  const ACCENT2   = '#06b6d4';
+  const TEXT      = '#f0f0ff';
+  const MUTED     = '#7878a0';
+  const BORDER    = 'rgba(255,255,255,0.07)';
+
+  // Layout cursor
+  let y = 0;
+
+  // Create canvas
+  const canvas = document.createElement('canvas');
+  canvas.width  = W * dpr;
+  canvas.height = (H || 100) * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  // ── Drawing primitives ──
+  function roundRect(x, y, w, h, r, fill, stroke) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    if (fill)   { ctx.fillStyle   = fill;   ctx.fill();   }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
+  }
+
+  function text(str, x, ty, font, color, align) {
+    ctx.font      = font;
+    ctx.fillStyle = color;
+    ctx.textAlign = align || 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(str, x, ty);
+  }
+
+  function wrap(str, x, ty, maxW, font, color, lineH) {
+    ctx.font = font; ctx.fillStyle = color; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    const words = str.split(''); // char-by-char for CJK
+    let line = '', lines = [];
+    for (const ch of str) {
+      const test = line + ch;
+      if (ctx.measureText(test).width > maxW && line) { lines.push(line); line = ch; }
+      else line = test;
+    }
+    if (line) lines.push(line);
+    lines.forEach((l, i) => { if (!measure) ctx.fillText(l, x, ty + i * lineH); });
+    return lines.length * lineH;
+  }
+
+  function sectionHeader(icon, title, sub) {
+    y += 24;
+    if (!measure) {
+      roundRect(PAD, y, C, 44, 10, CARD_BG, BORDER);
+      // icon box
+      roundRect(PAD + 10, y + 7, 30, 30, 8, 'rgba(124,58,237,0.15)', 'rgba(124,58,237,0.3)');
+      text(icon, PAD + 10 + 15, y + 7 + 5, '16px serif', TEXT, 'center');
+      text(title, PAD + 52, y + 14, '600 14px Noto Sans SC, sans-serif', TEXT, 'left');
+      if (sub) text(sub, PAD + C - 10, y + 16, '12px Noto Sans SC, sans-serif', MUTED, 'right');
+    }
+    y += 44 + 12;
+  }
+
+  function pill(label, x, py, bg, border, color) {
+    if (measure) return;
+    ctx.font = '500 11px Noto Sans SC, sans-serif';
+    const tw = ctx.measureText(label).width + 20;
+    roundRect(x, py, tw, 22, 11, bg, border);
+    ctx.fillStyle = color; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, x + 10, py + 11);
+    return tw;
+  }
+
+  // ══ PAINT ══════════════════════════════════════════════════
+
+  // Background
+  if (!measure) {
+    canvas.height = H * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.fillStyle = BG;
+    ctx.fillRect(0, 0, W, H);
+
+    // Subtle top glow
+    const grd = ctx.createRadialGradient(W * 0.2, 0, 0, W * 0.2, 0, W * 0.7);
+    grd.addColorStop(0, 'rgba(124,58,237,0.12)');
+    grd.addColorStop(1, 'transparent');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, W, H * 0.4);
+  }
+
+  y = PAD;
+
+  // ── HEADER ──
+  if (!measure) {
+    // Top accent line
+    const grad = ctx.createLinearGradient(PAD, 0, PAD + C, 0);
+    grad.addColorStop(0, ACCENT); grad.addColorStop(0.5, ACCENT2); grad.addColorStop(1, '#f59e0b');
+    ctx.fillStyle = grad;
+    ctx.fillRect(PAD, y, C, 3);
+  }
+  y += 3 + 20;
+
+  // Report title row
+  if (!measure) {
+    text('🌟 天赋测评报告', PAD, y, '600 14px Noto Sans SC, sans-serif', '#a78bfa', 'left');
+    text(date, PAD + C, y, '12px Noto Sans SC, sans-serif', MUTED, 'right');
+  }
+  y += 28;
+
+  // Crown + primary type
+  if (!measure) {
+    text(profile.icon, W / 2, y, '52px serif', TEXT, 'center');
+  }
+  y += 68;
+
+  if (!measure) {
+    text('主导天赋类型', W / 2, y, '11px Noto Sans SC, sans-serif', MUTED, 'center');
+  }
+  y += 18;
+
+  if (!measure) {
+    // Gradient text via fillText – approximate with solid color on canvas
+    ctx.font      = '800 36px Syne, sans-serif';
+    ctx.fillStyle = '#c4b5fd';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText(type, W / 2, y);
+  }
+  y += 48;
+
+  if (!measure) {
+    const tagLine = profile.tagline;
+    ctx.font = '400 13px Noto Sans SC, sans-serif';
+    ctx.fillStyle = MUTED; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    // wrap tagline centered
+    const words = tagLine;
+    let ln = '', lns = [];
+    for (const ch of tagLine) {
+      const t = ln + ch;
+      if (ctx.measureText(t).width > C * 0.85 && ln) { lns.push(ln); ln = ch; }
+      else ln = t;
+    }
+    if (ln) lns.push(ln);
+    lns.forEach((l, i) => ctx.fillText(l, W / 2, y + i * 20));
+    y += lns.length * 20;
+  } else {
+    // estimate 2 lines for tagline
+    y += 40;
+  }
+
+  // Secondary badges
+  if (!measure) {
+    const sec = sorted.slice(1, 3);
+    let bx = W / 2 - 120;
+    sec.forEach(([k]) => {
+      const d = DIMS[k];
+      const lbl = d.icon + ' ' + d.name + '  副天赋';
+      ctx.font = '500 11px Noto Sans SC, sans-serif';
+      const tw = ctx.measureText(lbl).width + 24;
+      roundRect(bx, y + 10, tw, 24, 12, 'rgba(255,255,255,0.05)', BORDER);
+      ctx.fillStyle = MUTED; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.fillText(lbl, bx + 12, y + 10 + 12);
+      bx += tw + 10;
+    });
+  }
+  y += 50;
+
+  // ── RADAR ──
+  sectionHeader('📡', '天赋能力图谱', '6维度全景');
+  const RADAR_SIZE = Math.min(C, 280);
+  const radarY = y;
+  // Draw radar inline
+  if (!measure) {
+    _drawRadarOnCanvas(ctx, sorted, maxRaw, W / 2 - RADAR_SIZE / 2, radarY, RADAR_SIZE);
+  }
+  y += RADAR_SIZE + 24;
+
+  // ── DIMENSION BARS ──
+  sectionHeader('📊', '各维度天赋指数');
+  sorted.forEach(([k, v]) => {
+    const d   = DIMS[k];
+    const pct = Math.min(Math.round((v / (maxRaw * 1.15)) * 100), 98);
+    const tag = pct >= 72 ? '非常擅长' : pct >= 50 ? '有些擅长' : '待发展';
+    const tagClr = pct >= 72 ? '#c4b5fd' : pct >= 50 ? '#67e8f9' : MUTED;
+    const tagBg  = pct >= 72 ? 'rgba(124,58,237,0.15)' : pct >= 50 ? 'rgba(6,182,212,0.12)' : 'rgba(255,255,255,0.04)';
+
+    if (!measure) {
+      roundRect(PAD, y, C, 38, 8, CARD_BG, BORDER);
+      // icon circle
+      ctx.beginPath(); ctx.arc(PAD + 10 + 12, y + 19, 12, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(124,58,237,0.2)'; ctx.fill();
+      text(d.icon, PAD + 10 + 12, y + 19 - 8, '14px serif', TEXT, 'center');
+      // name
+      text(d.name, PAD + 36, y + 12, '500 12px Noto Sans SC, sans-serif', TEXT, 'left');
+      // bar bg
+      const barX = PAD + 100, barW = C - 180, barY = y + 22, barH = 7;
+      roundRect(barX, barY, barW, barH, 3, 'rgba(255,255,255,0.06)');
+      // bar fill
+      const fillW = barW * pct / 100;
+      roundRect(barX, barY, Math.max(fillW, 4), barH, 3, d.gradient || ACCENT);
+      // pct text
+      text(pct + '%', barX + barW + 8, y + 12, '600 11px Noto Sans SC, sans-serif', tagClr, 'left');
+      // tag
+      pill(tag, PAD + C - 56, y + 9, tagBg, 'transparent', tagClr);
+    }
+    y += 38 + 8;
+  });
+  y += 8;
+
+  // ── CORE TALENT DEEP CARDS (top 2) ──
+  sectionHeader('👑', '核心天赋深度解读');
+  [[topKey, '主天赋'], [secKey, '副天赋']].forEach(([k, lbl], ci) => {
+    const p  = PROFILES[k];
+    const d  = DIMS[k];
+    const pct = Math.min(Math.round((scores[k] / (maxRaw * 1.15)) * 100), 98);
+
+    if (!measure) {
+      const cardH = ci === 0 ? 230 : 200;
+      const border = ci === 0 ? 'rgba(124,58,237,0.4)' : BORDER;
+      roundRect(PAD, y, C, cardH, 12, ci === 0 ? 'rgba(124,58,237,0.07)' : CARD_BG, border);
+      // icon + title row
+      roundRect(PAD + 12, y + 12, 44, 44, 12, 'rgba(124,58,237,0.15)', 'rgba(124,58,237,0.3)');
+      text(d.icon, PAD + 12 + 22, y + 12 + 10, '22px serif', TEXT, 'center');
+      text(lbl, PAD + 66, y + 16, '10px Noto Sans SC, sans-serif', MUTED, 'left');
+      text(p.title, PAD + 66, y + 30, '700 16px Syne, sans-serif', TEXT, 'left');
+      pill('天赋指数 ' + pct + '%', PAD + C - 90, y + 24, 'rgba(124,58,237,0.15)', 'rgba(124,58,237,0.3)', '#a78bfa');
+      // core value block
+      roundRect(PAD + 12, y + 64, C - 24, 3, 0, 'rgba(124,58,237,0.6)');
+      const cvH = wrap(p.coreValue, PAD + 22, y + 75, C - 44, '500 12px Noto Sans SC, sans-serif', '#e0d0ff', 18);
+      y += 64 + 16 + cvH + 12;
+      // traits label
+      text('你可能的特征', PAD + 12, y, '10px Noto Sans SC, sans-serif', MUTED, 'left');
+      y += 18;
+      let tx = PAD + 12;
+      p.traits.slice(0, 3).forEach(trait => {
+        const short = trait.length > 14 ? trait.slice(0, 13) + '…' : trait;
+        ctx.font = '11px Noto Sans SC, sans-serif';
+        const tw = ctx.measureText('✓ ' + short).width + 18;
+        if (tx + tw > PAD + C - 10) { tx = PAD + 12; y += 26; }
+        roundRect(tx, y, tw, 22, 5, 'rgba(255,255,255,0.04)', BORDER);
+        text('✓ ' + short, tx + 9, y + 5, '11px Noto Sans SC, sans-serif', MUTED, 'left');
+        tx += tw + 8;
+      });
+      y += 30;
+    } else {
+      y += ci === 0 ? 230 + 16 : 200 + 16;
+    }
+  });
+  y += 8;
+
+  // ── GROWTH ──
+  sectionHeader('🌱', '成长发展建议');
+  const growthItems = [
+    { icon:'💡', label:'核心优势', text: profile.description.replace(/<[^>]+>/g, '') },
+    { icon:'🚀', label:'发展建议', text: profile.growth },
+  ];
+  growthItems.forEach(item => {
+    if (!measure) {
+      const textH = Math.max(wrap(item.text, PAD + 62, y + 30, C - 80,
+        '400 12px Noto Sans SC, sans-serif', '#d0d0f0', 18), 18);
+      const cardH = textH + 48;
+      roundRect(PAD, y, C, cardH, 10, CARD_BG, BORDER);
+      roundRect(PAD + 12, y + 12, 36, 36, 10, 'rgba(124,58,237,0.12)', 'rgba(124,58,237,0.2)');
+      text(item.icon, PAD + 12 + 18, y + 12 + 8, '18px serif', TEXT, 'center');
+      text(item.label, PAD + 56, y + 14, '10px Noto Sans SC, sans-serif', MUTED, 'left');
+      wrap(item.text, PAD + 56, y + 28, C - 80, '400 12px Noto Sans SC, sans-serif', '#d0d0f0', 18);
+      y += cardH + 10;
+    } else {
+      const estLines = Math.ceil(item.text.length / 28);
+      y += estLines * 18 + 58;
+    }
+  });
+  y += 8;
+
+  // ── CAREERS ──
+  if (!measure) {
+    roundRect(PAD, y, C, 80, 10, CARD_BG, BORDER);
+    text('🎯 适合的职业方向', PAD + 14, y + 12, '600 13px Noto Sans SC, sans-serif', TEXT, 'left');
+    let cx2 = PAD + 14, cy2 = y + 32;
+    profile.careers.forEach(career => {
+      ctx.font = '11px Noto Sans SC, sans-serif';
+      const tw = ctx.measureText(career).width + 20;
+      if (cx2 + tw > PAD + C - 10) { cx2 = PAD + 14; cy2 += 26; }
+      roundRect(cx2, cy2, tw, 22, 11, 'rgba(245,158,11,0.1)', 'rgba(245,158,11,0.25)');
+      ctx.fillStyle = '#fcd34d'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.fillText(career, cx2 + 10, cy2 + 11);
+      cx2 += tw + 8;
+    });
+    y += 80 + 12;
+  } else {
+    y += 92;
+  }
+
+  // ── FOOTER ──
+  y += 16;
+  if (!measure) {
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.fillRect(PAD, y, C, 1);
+    y += 14;
+    text('天赋发现 · 专业测评', PAD, y, '12px Noto Sans SC, sans-serif', MUTED, 'left');
+    text('本报告仅供参考，祝你发现最好的自己 ✨', PAD + C, y, '11px Noto Sans SC, sans-serif', 'rgba(120,120,160,0.6)', 'right');
+    y += 20;
+  } else {
+    y += 34;
+  }
+
+  y += PAD;
+
+  if (measure) {
+    measureCb(y);
+  } else {
+    paintCb(canvas);
+  }
+}
+
+// Draw radar chart directly onto a provided canvas context
+function _drawRadarOnCanvas(ctx, sorted, maxRaw, ox, oy, size) {
+  const cx = ox + size / 2;
+  const cy = oy + size / 2;
+  const r  = size * 0.33;
+  const n  = sorted.length;
+  const maxVal = Math.max(maxRaw, 1);
+
+  function angle(i) { return (Math.PI * 2 * i / n) - Math.PI / 2; }
+  function pt(i, ratio) {
+    return { x: cx + r * ratio * Math.cos(angle(i)), y: cy + r * ratio * Math.sin(angle(i)) };
+  }
+
+  // Rings
+  for (let ring = 1; ring <= 5; ring++) {
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const p = pt(i, ring / 5);
+      i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = ring === 5 ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.05)';
+    ctx.lineWidth = 1; ctx.stroke();
+  }
+  // Axes
+  for (let i = 0; i < n; i++) {
+    const p = pt(i, 1);
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(p.x, p.y);
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1; ctx.stroke();
+  }
+  // Data
+  const ratios = sorted.map(([, v]) => Math.min(Math.max(v / (maxVal * 1.05), 0.08), 1));
+  ctx.beginPath();
+  sorted.forEach((_, i) => {
+    const p = pt(i, ratios[i]);
+    i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+  });
+  ctx.closePath();
+  ctx.fillStyle   = 'rgba(124,58,237,0.25)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(167,139,250,0.9)'; ctx.lineWidth = 2; ctx.stroke();
+  // Dots
+  sorted.forEach((_, i) => {
+    const p = pt(i, ratios[i]);
+    ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#c4b5fd'; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 1.5; ctx.stroke();
+  });
+  // Labels
+  sorted.forEach(([k], i) => {
+    const d = DIMS[k];
+    const p = pt(i, 1.28);
+    const pct = Math.min(Math.round((sorted[i][1] / (maxVal * 1.05)) * 100), 100);
+    ctx.font = '600 11px Noto Sans SC, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(d.icon + ' ' + d.name, p.x, p.y - 7);
+    ctx.font = '400 10px Noto Sans SC, sans-serif';
+    ctx.fillStyle = pct >= 70 ? '#c4b5fd' : 'rgba(180,180,210,0.6)';
+    ctx.fillText(pct + '%', p.x, p.y + 7);
+  });
+}
+
+function resetTest() {
+  if (confirm('确认清除测试记录？清除后可重新测试。')) {
+    try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+    showScreen('welcome');
+  }
+}
+
+// ── 隐藏后门：连续点击主天赋名称 3 次清空数据 ──
+let _secretClicks = 0;
+let _secretTimer  = null;
+function secretReset() {
+  _secretClicks++;
+  clearTimeout(_secretTimer);
+  // 重置计数器（2秒内没凑够3次就归零）
+  _secretTimer = setTimeout(() => { _secretClicks = 0; }, 2000);
+  if (_secretClicks >= 3) {
+    _secretClicks = 0;
+    clearTimeout(_secretTimer);
+    try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+    showToast('🔓 数据已清空，可重新测试');
+    setTimeout(() => showScreen('welcome'), 1000);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + name);
+  if (el) el.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // Keep "view report" entry visible on welcome if test is done
+  if (name === 'welcome' && loadSavedResult()) revealViewReportBtn();
+}
+</script>
+</body>
+</html>
